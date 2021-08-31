@@ -1,0 +1,8 @@
+---
+- name: This is a hello-world example
+  hosts: 10.200.149.86
+  tasks:
+    - name: Create a file called '/tmp/testfile.txt' with the content 'hello world'.
+      copy:
+        content: hello worldn
+        dest: /tmp/ansible-tasks/testfile.txt
