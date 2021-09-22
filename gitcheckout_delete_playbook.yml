@@ -1,0 +1,8 @@
+---
+- name: This is used to delete directory
+  hosts: localhost
+  tasks:
+    - name: Delete content & directory
+      file:
+        state: absent
+        path: "{{ gitCheckoutDir }}"

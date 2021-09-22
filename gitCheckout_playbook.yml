@@ -1,0 +1,13 @@
+---
+- name: This play book used for download files from git hub
+  hosts: localhost
+  tasks:
+    - name: Print a message
+      ansible.builtin.debug:
+        msg: 'Logging in as {{ gitRepository }} {{ gitCheckoutDir }}'
+        
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: "{{ gitRepository }}"
+        dest: "{{ gitCheckoutDir }}"
+        
