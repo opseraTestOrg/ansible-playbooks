@@ -1,0 +1,25 @@
+---
+- name: install tomcat server
+  hosts: localhost
+  
+  tasks: 
+    - 
+      name: "install java"
+      apt: 
+        name: openjdk-8-jdk
+        state: present
+        update_cache: yes
+    - 
+      get_url: 
+        dest: /usr/local
+        url: "https://downloads.apache.org/tomcat/tomcat-9/v9.0.52/bin/apache-tomcat-9.0.52.tar.gz"
+      name: "download tomcat server packages"
+    - 
+      name: extract tomcat packages
+      unarchive: 
+        dest: /usr/local
+        remote_src: true
+        src: /usr/local/apache-tomcat-9.0.52.tar.gz
+    - 
+      name: "start tomcat services"
+      shell: "nohup /usr/local/apache-tomcat-9.0.52/bin/startup.sh"
