@@ -1,0 +1,93 @@
+---
+- hosts: 10.200.149.86
+  vars:
+    ansible_command_timeout: 300
+    dtp_host: 10.200.149.86
+
+  tasks:
+  - name: Shutdown everything
+    block:
+    - name: ALL - Stop all containers
+      shell: docker stop $(docker ps -a -q) > /dev/null 2>&1 || exit 0
+      ignore_errors: True
+      args:
+        executable: /bin/bash
+        warn: no
+    - name: ALL - Remove all stoped containers
+      shell: docker rm $(docker ps -a -q) > /dev/null 2>&1 || exit 0
+      ignore_errors: True
+      args:
+        executable: /bin/bash
+        warn: no
+    - name: ALL - Remove all images
+      shell: docker rmi -f $(docker images -a -q) > /dev/null 2>&1 || exit 0
+      ignore_errors: True
+      args:
+        executable: /bin/bash
+        warn: no
+    - name: Remove old Docker volumes
+      shell: docker volume prune --force
+      args:
+        executable: /bin/bash
+    when: (dtp_host == 'true')
+
+  - name: Updating GW Hosts
+    block:
+    - name: GW - Copy .versions file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/gw-versions
+        dest: /home/dockersvcuser/slng/gateway-package/.versions
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: GW - Copy docker-compose.yml file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/gw-docker-compose.yml
+        dest: /home/dockersvcuser/slng/gateway-package/docker-compose.yml
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: GW - login to the repository
+      command:
+        cmd: 'docker login --username "username" --password "password" {{ hub }}'
+        chdir: /home/dockersvcuser
+    - name: GW - Start all docker processes
+      command:
+        cmd: '/home/dockersvcuser/slng/gateway-package/gateway.sh up'
+        chdir: /home/dockersvcuser/slng/gateway-package
+    when: (dtp_host == 'true') and (dtp_type == 'gw')
+
+  - name: Updating Pod Hosts
+    block:
+    - name: Pod - Copy .versions file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/pod-versions
+        dest: /home/dockersvcuser/slng/pod-package/.versions
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: Pod - Copy pods.csv file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/pods.csv
+        dest: /home/dockersvcuser/slng/pod-package/pods.csv
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: Pod - Copy pods.sh file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/pods.sh
+        dest: /home/dockersvcuser/slng/pod-package/pods.sh
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: Pod - Copy .versions file
+      copy:
+        src: /home/endsley/projects/dtpdeploy/dtp-restart/files/pod-docker-compose.yml
+        dest: /home/dockersvcuser/slng/pod-package/docker-compose.yml
+        owner: dockersvcuser
+        group: dockersvcuser
+    - name: Pod - login to the image repository
+      command:
+        cmd: 'docker login --username "username" --password "password" {{ hub }}'
+        chdir: /home/dockersvcuser
+    - name: Pod - Start all docker processes
+      command:
+        cmd: '/home/dockersvcuser/slng/pod-package/pods.sh up'
+        chdir: /home/dockersvcuser/slng/pod-package
+    when: (dtp_host == 'true') and (dtp_type == 'pod')
+
