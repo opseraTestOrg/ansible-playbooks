@@ -1,0 +1,47 @@
+---
+- hosts: 10.200.149.86
+  become: yes
+  vars:
+    ansible_command_timeout: 300
+
+  tasks:
+  - name: Gather the package facts
+    ansible.builtin.package_facts:
+      manager: auto
+  - name: Install New Relic Infra
+    block:
+    - name: Ubuntu - updating with apt-update
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+    - name: Install the agent
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - newrelic-infra
+    - name: Copy over the NewRelic config file
+      ansible.builtin.copy:
+        src: /home/endsley/projects/ansible/newrelic/files/newrelic-infra.yml
+        dest: /etc/newrelic-infra.yml
+        owner: root
+        group: root
+    - name: Set the display_name in newrelic-infra.yml
+      ansible.builtin.lineinfile:
+        path: /etc/newrelic-infra.yml
+        regexp: '^display_name:'
+        line: "display_name: {{ inventory_hostname }}"
+    - name: systemctl enable newrelic-infra
+      ansible.builtin.service:
+        name: newrelic-infra
+        enabled: yes
+    - name: systemctl newrelic-infra
+      ansible.builtin.service:
+        name: newrelic-infra
+        state: restarted
+    when: "'newrelic-infra' not in ansible_facts.packages"
+  - name: systemctl newrelic-infra
+    ansible.builtin.service:
+      name: newrelic-infra
+      state: restarted
+    become: yes
+    become_user: root
+
