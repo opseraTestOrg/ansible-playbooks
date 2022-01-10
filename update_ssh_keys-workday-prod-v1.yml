@@ -1,0 +1,15 @@
+- hosts: 10.200.149.86
+  become: yes
+  become_user: root
+  vars:
+    ansible_command_timeout: 300
+
+  tasks:
+  - name: Add public keys for user.
+    copy:
+      src: "files/dockersvcuser"
+      dest: "/etc/ssh/keys/dockersvcuser"
+      owner: "dockersvcuser"
+      group: "dockersvcuser"
+      mode: 0600
+
