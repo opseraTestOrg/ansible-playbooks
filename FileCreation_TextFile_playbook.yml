@@ -1,0 +1,10 @@
+---
+- name: This is a file creation playbook
+  hosts: all
+  vars:
+    destination: /tmp/ansible-tasks/testfile.txt
+  tasks:
+    - name: Create a file called '/tmp/testfile.txt' with the content 'A new File Got Created for Testing'.
+      copy:
+        content: A new File Got Created for Testing
+        dest: '{{ destination }}'    
